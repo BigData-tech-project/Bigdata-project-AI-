@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',  // Django CSRF 토큰
+                    'X-CSRFToken': csrfToken,  // Django CSRF 토큰
                 }
             })
             .then(response => response.json())
