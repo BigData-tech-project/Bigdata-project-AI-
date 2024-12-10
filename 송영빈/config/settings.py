@@ -35,6 +35,10 @@ DEBUG = True
 # 배포 환경에서 아래 와일드카드는 주의를 요함
 ALLOWED_HOSTS = ['*']
 
+DEFAULT_LOGGING = {
+    'version': 1,
+}
+
 
 # Application definition
 
