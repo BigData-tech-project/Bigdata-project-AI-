@@ -1,31 +1,46 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const loginButton = document.getElementById('login');
-    const loginForm = document.querySelector('form');
+    const registerButton = document.getElementById('login');
 
-    loginButton.addEventListener('click', function(event) {
+    registerButton.addEventListener('click', function(event) {
         event.preventDefault();
 
         const id = document.getElementById('id').value.trim();
         const pw = document.getElementById('pw').value.trim();
+        const repw = document.getElementById('repw').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
 
+        // 유효성 검사
         if (id === '') {
             alert('아이디를 입력하세요.');
             return;
         }
 
-        if (pw === '') {
+        if (pw === '' || repw === '') {
             alert('비밀번호를 입력하세요.');
             return;
         }
 
-        // 비밀번호를 SHA-256으로 인코딩
+        if (pw !== repw) {
+            alert('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+
+        if (pw.length < 8) {
+            alert('비밀번호는 최소 8자 이상이어야 합니다.');
+            return;
+        }
+
+        // 비밀번호를 SHA-256으로 해싱
         hashPassword(pw).then((hashedPw) => {
-            // 유효성 검사를 통과하면 AJAX로 로그인 요청
             const formData = new FormData();
             formData.append('id', id);
-            formData.append('pw', hashedPw);  // 해싱된 비밀번호를 전송
+            formData.append('pw', hashedPw);  // 해싱된 비밀번호
+            if (email) formData.append('email', email);  // 이메일이 선택적으로 입력되었을 때만 추가
+            if (nickname) formData.append('nickname', nickname);  // 별명이 선택적으로 입력되었을 때만 추가
 
-            fetch('/login/', {
+            // 서버로 데이터 전송
+            fetch('/register/', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -35,15 +50,15 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 로그인 성공 후 리디렉션
-                    window.location.href = '/';  // 루트로 이동
+                    alert('회원가입이 완료되었습니다.');
+                    window.location.href = '/nidLogin/';  // 로그인 페이지로 리디렉션
                 } else {
-                    alert(data.message);
+                    alert(data.message || '회원가입에 실패했습니다.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert(data.message);
+                alert('서버 요청 중 오류가 발생했습니다.');
             });
         }).catch(error => {
             console.error('Error in password hashing:', error);
