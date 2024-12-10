@@ -1,0 +1,77 @@
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+}
+
+.main-header {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem; /* 화면 크기에 따라 조정 가능 */
+}
+
+.main-content {
+    text-align: center;
+    font-size: 1.2rem; /* 글자 크기 유연하게 설정 */
+}
+
+.button-group {
+    display: flex;
+    flex-direction: row; /* 버튼들을 가로로 배치 */
+    gap: 20px; /* 버튼들 간의 간격 추가 */
+    justify-content: center; /* 버튼들을 가운데 정렬 */
+    align-items: center; /* 버튼 높이 정렬 */
+}
+
+button {
+    margin-top: 1rem; /* 상대 단위 사용 */
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem; /* 글자 크기 */
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* 작은 화면용 스타일 */
+@media (max-width: 768px) {
+    .main-header {
+        font-size: 1.5rem;
+    }
+
+    .main-content {
+        font-size: 1rem;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* 아주 작은 화면용 스타일 */
+@media (max-width: 480px) {
+    .main-header {
+        font-size: 1.2rem;
+    }
+
+    .main-content {
+        font-size: 0.8rem;
+    }
+
+    button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
