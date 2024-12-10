@@ -32,7 +32,8 @@ SECRET_KEY = 'django-insecure-v2ten80l!=k!c)7cil=i^woz4#a)_6n=the_$iy33ix0ed*pm6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 배포 환경에서 아래 와일드카드는 주의를 요함
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

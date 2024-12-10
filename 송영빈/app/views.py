@@ -1,9 +1,21 @@
 # Create your views here.
 from django import template
+from django.db import transaction
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from datetime import datetime
-from .models import Users
+from .models import Users, Info
+import logging
+
+logger = logging.getLogger('custom_logger')
+
+def get_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def main(request):
     context = {
@@ -54,8 +66,8 @@ def register_response(request):
         if Users.objects.filter(id=user_id).exists():
             return JsonResponse({'success': False, 'message': '이미 사용 중인 아이디입니다.'})
 
-        # Email 중복 확인
-        if Users.objects.filter(email=user_email).exists():
+        # Email 중복 확인(None이면 패스)
+        if user_email and Users.objects.filter(email=user_email).exists():
             return JsonResponse({'success': False, 'message': '이미 사용 중인 이메일입니다.'})
 
         # 닉네임이 없으면 id로 교체
@@ -64,13 +76,24 @@ def register_response(request):
 
         # 새로운 사용자 생성 및 저장
         try:
-            new_user = Users(
-                id=user_id,
-                password=user_pw,  # 해싱된 비밀번호 저장
-                email=user_email,
-                nickname=user_nickname
-            )
-            new_user.save()
+            with transaction.atomic():
+                # 새로운 사용자 생성
+                new_user = Users(
+                    id=user_id,
+                    password=user_pw,  # 해싱된 비밀번호 저장
+                    email=user_email,
+                    nickname=user_nickname,
+                )
+                new_user.save()
+
+                # Info 생성
+                new_info = Info(
+                    id=new_user,  # ForeignKey에 Users 인스턴스 할당
+                    region=None,
+                    diseases=None,
+                )
+                new_info.save()
+
             return JsonResponse({'success': True, 'message': '회원가입이 완료되었습니다.'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': '회원가입 중 오류가 발생했습니다.', 'error': str(e)})
