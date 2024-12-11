@@ -1,7 +1,8 @@
 # Create your views here.
 from django import template
+from django.contrib.auth import authenticate, login, logout
 from django.db import transaction
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from datetime import datetime
 from .models import Users, Info
@@ -38,18 +39,23 @@ def login_response(request):
 
         # 사용자가 입력한 ID에 해당하는 사용자 정보를 DB에서 조회
         try:
-            user = Users.objects.get(id=user_id)  # Users 모델에서 ID로 검색
+            user = Users.objects.get(user_id=user_id)  # Users 모델에서 ID로 검색
         except Users.DoesNotExist:
             # 해당 ID를 가진 사용자가 없다면 로그인 실패 처리
             return JsonResponse({'success': False, 'message': '아이디가 존재하지 않습니다.'})
 
         # DB에 저장된 비밀번호와 입력된 비밀번호를 비교
         if user_pw == user.password:  # 비밀번호 비교
-            return JsonResponse({'success': True})  # 로그인 성공
+            login(request, user)
+            return JsonResponse({'success': True, 'data': user.nickname})  # 로그인 성공
         else:
             return JsonResponse({'success': False, 'message': '비밀번호가 틀렸습니다.'})  # 비밀번호 오류
 
-    return JsonResponse({'success': False}, status=400)  # POST가 아닐 경우 에러 응답
+    return JsonResponse({'success': False, 'message': '올바른 접근이 아닙니다.'}, status=400)  # POST가 아닐 경우 에러 응답
+
+def log_out(request):
+    logout(request)
+    return redirect('/')
 
 def register_response(request):
     if request.method == 'POST':
@@ -63,7 +69,7 @@ def register_response(request):
             return JsonResponse({'success': False, 'message': '모든 필드를 입력해야 합니다.'})
 
         # ID 중복 확인
-        if Users.objects.filter(id=user_id).exists():
+        if Users.objects.filter(user_id=user_id).exists():
             return JsonResponse({'success': False, 'message': '이미 사용 중인 아이디입니다.'})
 
         # Email 중복 확인(None이면 패스)
@@ -79,7 +85,7 @@ def register_response(request):
             with transaction.atomic():
                 # 새로운 사용자 생성
                 new_user = Users(
-                    id=user_id,
+                    user_id=user_id,
                     password=user_pw,  # 해싱된 비밀번호 저장
                     email=user_email,
                     nickname=user_nickname,

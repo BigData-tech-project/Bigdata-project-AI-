@@ -5,7 +5,10 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.db import models
+from django.db.models import *
 
 
 class AuthGroup(models.Model):
@@ -128,7 +131,7 @@ class Info(models.Model):
     diseases = models.CharField(db_column='DISEASES', max_length=100, blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'info'
 
 
@@ -142,13 +145,43 @@ class SysConfig(models.Model):
         managed = False
         db_table = 'sys_config'
 
+class UserManager(BaseUserManager):
+    def create_user(self, user_id, password=None, **extra_fields):
+        if not user_id:
+            raise ValueError('The User ID must be set')
+        user = self.model(user_id=user_id, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-class Users(models.Model):
-    id = models.CharField(db_column='ID', primary_key=True, max_length=16)  # Field name made lowercase.
-    password = models.CharField(db_column='PASSWORD', max_length=64)  # Field name made lowercase.
-    email = models.CharField(db_column='EMAIL', max_length=40)  # Field name made lowercase.
+    def create_superuser(self, user_id, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(user_id, password, **extra_fields)
+
+class Users(AbstractBaseUser, PermissionsMixin):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    user_id = models.CharField(db_column='USER_ID', max_length=16, unique=True)  # Field name made lowercase.
+    password = models.CharField(db_column='PASSWORD', max_length=256)  # Field name made lowercase.
+    email = models.CharField(db_column='EMAIL', max_length=40, blank=True, null=True)  # Field name made lowercase.
     nickname = models.CharField(db_column='NICKNAME', max_length=20)  # Field name made lowercase.
+    last_login = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'user_id'  # 로그인에 사용할 필드
+    REQUIRED_FIELDS = ['email']  # create_superuser에 필요한 필드
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'users'
+
