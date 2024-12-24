@@ -1,0 +1,1 @@
+data_test01neSET GLOBAL local_infile = 1;
