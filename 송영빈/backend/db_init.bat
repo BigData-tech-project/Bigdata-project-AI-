@@ -1,2 +1,2 @@
-mysql -u root -paa152535 sys < init.sql
+mysql -u root -pYour_Password sys < table_backup.sql
 echo "db was restored"
