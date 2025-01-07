@@ -182,9 +182,8 @@ def update_user_info(request):
             # Info 테이블 업데이트
             if user_region:
                 info_record.region = user_region
-            if user_disease[:1] == ',':
-                user_disease = user_disease[1:]
-            info_record.diseases = user_disease
+            if user_disease:
+                info_record.diseases = user_disease
 
             # 데이터 저장
             user_record.save()
