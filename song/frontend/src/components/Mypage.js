@@ -137,11 +137,15 @@ function Mypage() {
           <p><strong>관측소 지역:</strong> {userData.region}</p>
           <p><strong>질환:</strong></p>
           <div className="diseases-cards">
-            {userData.diseases !== null ? userData.diseases.split(",").map((disease, index) => (
+            {userData.diseases !== null && userData.diseases !== "" ? userData.diseases.split(",").map((disease, index) => (
               <div key={index} className="disease-card">
                 {disease}
               </div>
-            )) : null}
+            )) :
+            <div key="0" className="disease-card">
+                {"없음"}
+              </div>
+            }
           </div>
           <p>&nbsp;</p>
           <Link to="/update"><button>정보수정</button></Link>

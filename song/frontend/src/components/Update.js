@@ -110,7 +110,7 @@ function Update() {
       if (response.ok) {
         setSuccess(true);
         setTimeout(() => navigate("/mypage"), 3000);
-        localStorage.setItem("diseases", joinDiseases);
+        joinDiseases ? localStorage.setItem("diseases", joinDiseases) : localStorage.setItem("diseases", "");
       } else {
         setError("정보를 업데이트하는 데 실패했어요.");
       }
