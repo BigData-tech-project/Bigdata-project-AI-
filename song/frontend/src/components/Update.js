@@ -92,6 +92,7 @@ function Update() {
     e.preventDefault();
     try {
       setLoading(true); // 로딩 상태 시작
+      const joinDiseases = formData.diseases.join(",");
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/update/`, {
         method: "POST",
         headers: {
@@ -102,13 +103,14 @@ function Update() {
         body: JSON.stringify({
           ...formData,
           region: formData.subRegion ? `${formData.region} ${formData.subRegion}` : formData.region,
-          diseases: formData.diseases.join(","),
+          diseases: joinDiseases,
         }),
       });
 
       if (response.ok) {
         setSuccess(true);
         setTimeout(() => navigate("/mypage"), 3000);
+        localStorage.setItem("diseases", joinDiseases);
       } else {
         setError("정보를 업데이트하는 데 실패했어요.");
       }
