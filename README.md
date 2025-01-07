@@ -1,13 +1,45 @@
-# 2024.12.10 회의
+## 테스트 방법
 
-## 1. 프로젝트
-**AI 기반 미세먼지 건강 영향 분석 시스템**
+루트 디렉터리에 `.env` 파일 생성 후 아래의 내용을 기재 후 저장
 
-## 2. 역할
-- **송영빈 님** : 로그인/회원가입, mypage, DB(user(ID, PW, Name, 지역(주소)), healthinfo(ID, 질병 이력) 생성
-- **임태형 님** : 현재의 미세먼지 농도 보여주고, 사용자 건강에 미칠 영향 분석 페이지로 이동하는 버튼이 있는 페이지 생성
-- **김세영 님** : 사용자의 건강에 미칠 영향을 분석하는 페이지 폼 생성
-- **정수현 님** : 오늘의 미세먼지(요일별/시간별 선택) 페이지 생성 -> 요일/시간을 누르면 해당 시간대에 따라서 AI 모델 예측
-- **ALL** : AI 모델 구축
+`REACT_APP_API_URL=http://127.0.0.1:8000`
 
-## 3. 다음주 월요일 오전 회의
+이후 ```npm start``` 로 실행 ...
+
+얘는 실행만 하면 끝
+
+## 주의사항
+
+실행 후 호스트 주소 변경 필요 
+
+기본 실행 호스트가 [http://localhost:3000]()인데 
+
+[http://127.0.0.1:3000]() 으로 바꿔서 접속해야 정상 실행 (CORS 오류)
+
+## 별도로 프로젝트에서 사용법
+
+유저 정보는 로그인할때 일괄로 받아와서 로컬스토리지에 저장합니다.
+
+페이지 만드실 때 아래의 코드를 참고해서 테스트 하시면 됩니다.
+
+```javascript
+localStorage.setItem("user_id", "test_id");
+localStorage.setItem("email", "test@email.com");
+localStorage.setItem("region", "서울 송파구");
+localStorage.setItem("diseases", "질병1,질병2, ..."); // ,로 구분
+localStorage.setItem("nickname", "닉네임");
+```
+위 코드를 테스트할 페이지에 삽입후 
+
+```javascript
+localStorage.getItem("user_id");
+localStorage.getItem("email");
+localStorage.getItem("region");
+localStorage.getItem("diseases"); // ,로 구분
+localStorage.getItem("nickname");
+
+// diseases의 경우 ,로 구분되기 때문에 
+localStorage.getItem("diseases").split(","); // return: (list)
+```
+
+이렇게 쓰시면 될듯 합니다.
