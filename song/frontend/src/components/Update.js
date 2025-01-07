@@ -92,7 +92,7 @@ function Update() {
     e.preventDefault();
     try {
       setLoading(true); // 로딩 상태 시작
-      const joinDiseases = formData.diseases.join(",");
+      const joinDiseases = formData.diseases.filter(diseases => diseases).join(",");
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/update/`, {
         method: "POST",
         headers: {
