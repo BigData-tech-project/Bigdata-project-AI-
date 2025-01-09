@@ -3,9 +3,10 @@
 루트 디렉터리에 `.env` 파일 생성 후 아래의 내용을 기재 후 저장
 
 `REACT_APP_API_URL=http://127.0.0.1:8000`
-`REACT_APP_API_KEY=pVHLUl3UGVDmm+B0aUxMttCQnoCePxtWLb4WJKushUW6XjTX93l89IkU/dELSR6nZ318fR3efuSBb3gVpjAFFA==`
+`REACT_APP_API_KEY=pVHLUl3UGVDmm%2BB0aUxMttCQnoCePxtWLb4WJKushUW6XjTX93l89IkU%2FdELSR6nZ318fR3efuSBb3gVpjAFFA%3D%3D`
 
 이후 ```npm start``` 로 실행 ...
+
 ## 주의사항
 
 실행 후 호스트 주소 변경 필요 
