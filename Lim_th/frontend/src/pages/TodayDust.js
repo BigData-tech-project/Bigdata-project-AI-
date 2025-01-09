@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import 'leaflet/dist/leaflet.css';
@@ -12,6 +12,19 @@ import cityCoordinates from '../region_mapping/cityPosition.js';
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
+// ZoomHandler 컴포넌트 - 줌 레벨 변경 감지
+const ZoomHandler = ({ onZoomChange }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.on('zoomend', () => {
+      onZoomChange(map.getZoom());
+    });
+  }, [map, onZoomChange]);
+
+  return null;
+};
+
 const TodayDust = () => {
   const [dustData, setDustData] = useState(null);
   const [dbData, setDbData] = useState(null);
@@ -19,6 +32,7 @@ const TodayDust = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
+  const [currentZoom, setCurrentZoom] = useState(7);
 
   const fetchDustData = async () => {
     try {
@@ -33,11 +47,10 @@ const TodayDust = () => {
     }
   };
 
-
   const fetchDbData = async (userId) => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/app/info/', {
-        withCredentials: true  // 쿠키를 포함한 요청을 보내도록 설정
+        withCredentials: true
       });
       console.log('DB Response:', response.data);
       
@@ -54,7 +67,6 @@ const TodayDust = () => {
 
   const fetchDetailData = async (fullRegion) => {
     try {
-      // 지역명을 공백을 기준으로 분리
       const [mainRegion, subRegion] = fullRegion.split(' ');
       
       console.log('메인 지역:', mainRegion);
@@ -65,8 +77,6 @@ const TodayDust = () => {
       );
   
       const allItems = response.data.response.body.items;
-      
-      // subRegion과 일치하는 도시의 데이터만 필터링
       const filteredItems = allItems.filter(item => item.cityName === subRegion)
         .sort((a, b) => new Date(b.dataTime) - new Date(a.dataTime));
   
@@ -131,12 +141,27 @@ const TodayDust = () => {
   };
 
   // 마커 스타일 가져오기
-  const getMarkerStyle = (value) => {
+  const getMarkerStyle = (value, zoomLevel) => {
     const thresholds = [30, 80, 150];
-    const colors = ['rgba(128, 128, 128, 0.7)', 'rgba(76, 80, 175, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(255, 245, 89, 0.7)', 'rgba(244, 67, 54, 0.7)'];
+    const colors = [
+      'rgba(128, 128, 128, 0.7)',
+      'rgba(76, 80, 175, 0.7)',
+      'rgba(76, 175, 80, 0.7)',
+      'rgba(255, 245, 89, 0.7)',
+      'rgba(244, 67, 54, 0.7)'
+    ];
 
     const backgroundColor = getColorByValue(value, thresholds, colors);
-    const size = [30, 32.5, 35, 37.5][thresholds.findIndex(threshold => parseFloat(value) <= threshold) + 1] || 50;
+    
+    // 기본 크기 설정
+    const baseSize = [30, 32.5, 35, 37.5][thresholds.findIndex(threshold => parseFloat(value) <= threshold) + 1] || 50;
+    
+    // 줌 레벨에 따른 크기 조정
+    const zoomFactor = Math.max(0.8, (zoomLevel - 5) / 2);
+    const size = baseSize * zoomFactor;
+
+    // 폰트 크기도 줌 레벨에 따라 조정
+    const fontSize = Math.max(8, Math.min(16, 12 * zoomFactor));
 
     return {
       width: `${size}px`,
@@ -144,6 +169,7 @@ const TodayDust = () => {
       backgroundColor,
       borderRadius: '5px',
       border: '2px solid #333',
+      fontSize: `${fontSize}px`
     };
   };
 
@@ -157,63 +183,61 @@ const TodayDust = () => {
     ([key]) => key !== 'dataTime' && key !== 'dataGubun' && key !== 'itemCode'
   );
 
-  // 컴포넌트 렌더링
   return (
     <>
-      <div className="dust-container" >
+      <div className="dust-container">
         {/* API 데이터 섹션 */}
         <div className="api-data-section">
-  <ul className="api-data-list">
-    {apiData.map((data) => (
-      <li key={data.region} className="api-data-item">
-        <h3>
-          <span className="region-name">{data.region}</span> 대기질 정보
-        </h3>
-        {data.apiData.length === 0 ? (
-          <p>해당 지역의 데이터가 없습니다.</p>
-        ) : (
-          // 첫 번째 데이터만 사용하도록 수정
-          <div className="measurement-info">
-            <div className="gauge-container">
-              {[
-                { value: data.apiData[0].pm10Value, label: 'PM10(미세먼지)', max: 150 },
-                { value: data.apiData[0].pm25Value, label: 'PM2.5(초미세먼지)', max: 150 },
-                { value: data.apiData[0].o3Value, label: 'O3(오존)', max: 1 }
-              ].map(({ value, label, max }) => (
-                <div key={label} className="gauge">
-                  <CircularProgressbar
-                    value={parseFloat(value) || 0}
-                    maxValue={max}
-                    text={value ? `${value}${label === 'O3(오존)' ? 'ppm' : '㎍/m³'}` : 'N/A'}
-                    styles={buildStyles({
-                      pathColor: getColorByValue(value, [15, 50, 100], ['rgba(128, 128, 128, 0.7)', 'rgba(76, 80, 175, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(244, 67, 54, 0.7)']),
-                      textColor: '#333',
-                    })}
-                  />
-                  <p>{label}</p>
-                </div> 
-              ))}
-            </div>
-            <ul>
-              <li>
-                <span style={{ backgroundColor: 'rgba(76, 80, 175, 0.7)' }}></span> : 좋음
+          <ul className="api-data-list">
+            {apiData.map((data) => (
+              <li key={data.region} className="api-data-item">
+                <h3>
+                  <span className="region-name">{data.region}</span> 대기질 정보
+                </h3>
+                {data.apiData.length === 0 ? (
+                  <p>해당 지역의 데이터가 없습니다.</p>
+                ) : (
+                  <div className="measurement-info">
+                    <div className="gauge-container">
+                      {[
+                        { value: data.apiData[0].pm10Value, label: 'PM10(미세먼지)', max: 150 },
+                        { value: data.apiData[0].pm25Value, label: 'PM2.5(초미세먼지)', max: 150 },
+                        { value: data.apiData[0].o3Value, label: 'O3(오존)', max: 1 }
+                      ].map(({ value, label, max }) => (
+                        <div key={label} className="gauge">
+                          <CircularProgressbar
+                            value={parseFloat(value) || 0}
+                            maxValue={max}
+                            text={value ? `${value}${label === 'O3(오존)' ? 'ppm' : '㎍/m³'}` : 'N/A'}
+                            styles={buildStyles({
+                              pathColor: getColorByValue(value, [15, 50, 100], ['rgba(128, 128, 128, 0.7)', 'rgba(76, 80, 175, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(244, 67, 54, 0.7)']),
+                              textColor: '#333',
+                            })}
+                          />
+                          <p>{label}</p>
+                        </div> 
+                      ))}
+                    </div>
+                    <ul>
+                      <li>
+                        <span style={{ backgroundColor: 'rgba(76, 80, 175, 0.7)' }}></span> : 좋음
+                      </li>
+                      <li>
+                        <span style={{ backgroundColor: 'rgba(76, 175, 80, 0.7)' }}></span> : 보통
+                      </li>
+                      <li>
+                        <span style={{ backgroundColor: 'rgba(255, 245, 89, 0.7)' }}></span> : 나쁨
+                      </li>
+                      <li>
+                        <span style={{ backgroundColor: 'rgba(244, 67, 54, 0.7)' }}></span> : 매우 나쁨
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </li>
-              <li>
-                <span style={{ backgroundColor: 'rgba(76, 175, 80, 0.7)' }}></span> : 보통
-              </li>
-              <li>
-                <span style={{ backgroundColor: 'rgba(255, 245, 89, 0.7)' }}></span> : 나쁨
-              </li>
-              <li>
-                <span style={{ backgroundColor: 'rgba(244, 67, 54, 0.7)' }}></span> : 매우 나쁨
-              </li>
-            </ul>
-          </div>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>
+            ))}
+          </ul>
+        </div>
 
         {/* 질병 정보 박스 */}
         {dustData?.disease && (
@@ -268,11 +292,11 @@ const TodayDust = () => {
         <MapContainer
           center={[36.3, 128.5]}
           zoom={7}
-          scrollWheelZoom={false}
-          zoomControl={false}
+          scrollWheelZoom={true}
           doubleClickZoom={false}
           className="map-container"
         >
+          <ZoomHandler onZoomChange={setCurrentZoom} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
@@ -281,15 +305,26 @@ const TodayDust = () => {
             const coordinates = cityCoordinates[cityMapping[city]];
             if (!coordinates) return null;
 
-            const markerStyle = getMarkerStyle(value);
+            const markerStyle = getMarkerStyle(value, currentZoom);
             const icon = L.divIcon({
               className: 'custom-icon',
               html: `
-                <div style="width:${markerStyle.width}; height:${markerStyle.height}; background-color:${markerStyle.backgroundColor}; border-radius:${markerStyle.borderRadius}; border:${markerStyle.border}; display: flex; justify-content: center; align-items: center;">
-                  <span style="color: #000; font-weight: bold; font-size: 12px;">${cityMapping[city]}</span>
+                <div style="
+                  width:${markerStyle.width}; 
+                  height:${markerStyle.height}; 
+                  background-color:${markerStyle.backgroundColor}; 
+                  border-radius:${markerStyle.borderRadius}; 
+                  border:${markerStyle.border}; 
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center;
+                  font-size: ${markerStyle.fontSize};
+                ">
+                  <span style="color: #000; font-weight: bold;">${cityMapping[city]}</span>
                 </div>
               `,
             });
+
             return (
               <Marker key={city} position={coordinates} icon={icon}>
                 <Popup>
@@ -307,6 +342,7 @@ const TodayDust = () => {
                     </Link> <br />
                     미세먼지(PM10): <span style={{ fontWeight: 'bold' }}>{value}㎍/m³</span> <br />
                     상태: 
+                
                     <span style={{ fontWeight: 'bold' }}>
                       {parseFloat(value) <= 30 ? '좋음' :
                        parseFloat(value) <= 80 ? '보통' :
