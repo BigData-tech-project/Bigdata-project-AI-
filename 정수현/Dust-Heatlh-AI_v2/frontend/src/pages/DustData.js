@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale } from 'chart.js';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import 'leaflet/dist/leaflet.css';
@@ -12,6 +12,19 @@ import cityCoordinates from '../region_mapping/cityPosition.js';
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
+// ZoomHandler 컴포넌트 - 줌 레벨 변경 감지
+const ZoomHandler = ({ onZoomChange }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.on('zoomend', () => {
+      onZoomChange(map.getZoom());
+    });
+  }, [map, onZoomChange]);
+
+  return null;
+};
+
 const TodayDust = () => {
   const [dustData, setDustData] = useState(null);
   const [dbData, setDbData] = useState(null);
@@ -19,6 +32,7 @@ const TodayDust = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
+  const [currentZoom, setCurrentZoom] = useState(7);
 
   const fetchDustData = async () => {
     try {
@@ -133,13 +147,28 @@ const TodayDust = () => {
     return colors[colors.length - 1];
   };
 
-  // 마커 스타일 가져오기
-  const getMarkerStyle = (value) => {
+   // 마커 스타일 가져오기
+   const getMarkerStyle = (value, zoomLevel) => {
     const thresholds = [30, 80, 150];
-    const colors = ['rgba(128, 128, 128, 0.7)', 'rgba(76, 80, 175, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(255, 245, 89, 0.7)', 'rgba(244, 67, 54, 0.7)'];
+    const colors = [
+      'rgba(128, 128, 128, 0.7)',
+      'rgba(76, 80, 175, 0.7)',
+      'rgba(76, 175, 80, 0.7)',
+      'rgba(255, 245, 89, 0.7)',
+      'rgba(244, 67, 54, 0.7)'
+    ];
 
     const backgroundColor = getColorByValue(value, thresholds, colors);
-    const size = [30, 32.5, 35, 37.5][thresholds.findIndex(threshold => parseFloat(value) <= threshold) + 1] || 50;
+    
+    // 기본 크기 설정
+    const baseSize = [30, 32.5, 35, 37.5][thresholds.findIndex(threshold => parseFloat(value) <= threshold) + 1] || 50;
+    
+    // 줌 레벨에 따른 크기 조정
+    const zoomFactor = Math.max(0.8, (zoomLevel - 5) / 2);
+    const size = baseSize * zoomFactor;
+
+    // 폰트 크기도 줌 레벨에 따라 조정
+    const fontSize = Math.max(8, Math.min(16, 12 * zoomFactor));
 
     return {
       width: `${size}px`,
@@ -147,8 +176,10 @@ const TodayDust = () => {
       backgroundColor,
       borderRadius: '5px',
       border: '2px solid #333',
+      fontSize: `${fontSize}px`
     };
   };
+
 
   // 로딩 및 에러 상태 처리
   if (loading) return <div className="loading">로딩중...</div>;
@@ -275,11 +306,11 @@ const TodayDust = () => {
         <MapContainer
           center={[36.3, 128.5]}
           zoom={7}
-          scrollWheelZoom={false}
-          zoomControl={false}
+          scrollWheelZoom={true}
           doubleClickZoom={false}
           className="map-container"
         >
+          <ZoomHandler onZoomChange={setCurrentZoom} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; OpenStreetMap contributors"
@@ -288,20 +319,31 @@ const TodayDust = () => {
             const coordinates = cityCoordinates[cityMapping[city]];
             if (!coordinates) return null;
 
-            const markerStyle = getMarkerStyle(value);
+            const markerStyle = getMarkerStyle(value, currentZoom);
             const icon = L.divIcon({
               className: 'custom-icon',
               html: `
-                <div style="width:${markerStyle.width}; height:${markerStyle.height}; background-color:${markerStyle.backgroundColor}; border-radius:${markerStyle.borderRadius}; border:${markerStyle.border}; display: flex; justify-content: center; align-items: center;">
-                  <span style="color: #000; font-weight: bold; font-size: 12px;">${cityMapping[city]}</span>
+                <div style="
+                  width:${markerStyle.width}; 
+                  height:${markerStyle.height}; 
+                  background-color:${markerStyle.backgroundColor}; 
+                  border-radius:${markerStyle.borderRadius}; 
+                  border:${markerStyle.border}; 
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center;
+                  font-size: ${markerStyle.fontSize};
+                ">
+                  <span style="color: #000; font-weight: bold;">${cityMapping[city]}</span>
                 </div>
               `,
             });
+
             return (
               <Marker key={city} position={coordinates} icon={icon}>
                 <Popup>
                   <div style={{ textAlign: 'center', fontFamily: 'Roboto, sans-serif', color: '#333' }}>
-                    <Link 
+                  <Link 
                       to="/usernowdata"
                       state={{ city: cityMapping[city] }}
                       style={{ 
@@ -315,6 +357,7 @@ const TodayDust = () => {
                     </Link> <br />
                     미세먼지(PM10): <span style={{ fontWeight: 'bold' }}>{value}㎍/m³</span> <br />
                     상태: 
+                
                     <span style={{ fontWeight: 'bold' }}>
                       {parseFloat(value) <= 30 ? '좋음' :
                        parseFloat(value) <= 80 ? '보통' :
