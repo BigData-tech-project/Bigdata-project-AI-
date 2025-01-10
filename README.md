@@ -1,6 +1,11 @@
-```npm install react-arc-progress -S```
+```
+npm install react-arc-progress -S
+npm install @mui/joy @mui/icons-material
+```
 ```npm install @mui/base```
-package.json에 추가
+
+
+## package.json에 추가
 ```
 "peerDependencies": {
   "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
