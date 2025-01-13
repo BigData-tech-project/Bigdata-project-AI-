@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import '../css/main.css';
+import MenuIcon from '@mui/icons-material/Menu';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 function Mypage() {
+
   const [userData, setUserData] = useState(null);
   const [accessHistory, setAccessHistory] = useState([]);
   const [error, setError] = useState("");
@@ -122,10 +126,33 @@ function Mypage() {
     } else {
       return "success-row";
     }
+  };  
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
   return (
-    <div className="mypage-container">
+    <div className="app-container">
+      {/* HEADER */}
+      <header className="header">
+        <p className="menu-button" onClick={toggleSidebar}><MenuIcon sx={{ fontSize: 25 }} className="header-button" /></p>
+        <div className="location">서울시 장진구 중곡동</div>
+        <Link to={'/map'}><LocationOnIcon sx={{ fontSize: 25 }} className="header-button" /></Link>
+      </header>
+
+      {sidebarOpen && (
+        <aside className="sidebar">
+          <p className="menu-button" onClick={toggleSidebar}><MenuIcon sx={{ fontSize: 25 }} className="header-button" /></p>
+          <ul>
+            <li><Link to="/">홈</Link></li>
+            <li><Link to="/mypage">마이페이지</Link></li>
+            <li><Link to="/login">로그아웃</Link></li>
+          </ul>
+        </aside>
+      )}
+    {/* <div className="mypage-container"> */}
       <h1>마이페이지</h1>
       {error && <p className="error-message">{error}</p>}
       {validationErrors.userData && <p className="error-message">{validationErrors.userData}</p>}

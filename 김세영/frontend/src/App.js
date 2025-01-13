@@ -12,9 +12,11 @@ import './css/base.css';
 import UserNowData from './pages/UserNowData';
 import UserPastData from './pages/UserPastData';
 import Analyze from './pages/Analyze';
+import Main from './pages/Main';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -51,12 +53,13 @@ function App() {
 
   return (
     <Router>
+      
+      {/*       
       <nav>
         <ul>
           {isAuthenticated ? (
             <> 
-              <li><Link to="/todaydust">Main</Link></li>
-              <li><Link to="/analyze">AI 분석</Link></li>
+              <li><Link to="/">Main</Link></li>
               <li><Link to="/mypage">마이페이지</Link></li>
               <li>
                 <Link
@@ -86,10 +89,10 @@ function App() {
             </>
           )}
         </ul>
-      </nav>
+      </nav> */}
       <Routes>
-        <Route path="/" element={<TodayDust />} />
-        <Route path="/main" element={<TodayDust />} />
+        <Route path="/" element={isAuthenticated ? <Main /> : <Navigate to="/login" />} />
+        <Route path="/main" element={<Main />} />
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login setIsAuthenticated={setIsAuthenticated} />}
@@ -100,7 +103,7 @@ function App() {
         />
         <Route
           path="/analyze"
-          element={isAuthenticated ? <Analyze /> : <Navigate to="/login" />}
+          element={<Analyze />}
         />
         <Route
           path="/mypage"

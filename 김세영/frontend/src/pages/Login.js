@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Link만 임포트
+import '../css/login.css';
 
 async function hashPasswordPBKDF2(password, salt) {
   const encoder = new TextEncoder();
@@ -96,33 +97,55 @@ function Login({ setIsAuthenticated }) {  // setIsAuthenticated를 props로 받�
   };
 
   return (
-    <div className="login-container">
-      <h2>로그인</h2>
+    <div className="app-container">
+      <h2 className='login-title'>로그인</h2>
+      <div className='form-container'>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="id">아이디:</label>
-          <input
+        <div class="input-container">
+        {/* <label htmlFor="id">아이디:</label> */}
+          <input 
+            placeholder="아이디" 
+            class="input-field" 
             type="text"
             id="id"
             value={id}
             onChange={(e) => setId(e.target.value)}
-            required
-          />
+            required/>
+          <label for="input-field" class="input-label">아이디</label>
+          <span class="input-highlight"></span>
         </div>
-        <div className="form-group">
-          <label htmlFor="pw">비밀번호:</label>
-          <input
+
+        <div class="input-container">
+        {/* <label htmlFor="pw">비밀번호:</label> */}
+          <input 
+            placeholder="비밀번호" 
+            class="input-field" 
             type="password"
             id="pw"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
-            required
-          />
+            required/>
+          <label for="input-field" class="input-label">비밀번호</label>
+          <span class="input-highlight"></span>
         </div>
         {error && <p className="error-message">{error}</p>}
-        <button type="submit" className="btn-primary" disabled={loading}>{loading ? "로그인 중..." : "로그인"}</button>
-        <Link to="/register"><button>회원가입</button></Link>
+
+        <button className="button" type="submit" disabled={loading}>
+          {loading ? "로그인 중..." : "로그인"}
+          <span class="button-span"></span>
+        </button>
+
+        <div className="register-section">
+          <p className='reg-text'>아직 회원이 아니신가요?</p>
+          <Link to="/register">
+            <button className="button">
+              회원가입
+              <span class="button-span"></span>
+            </button>
+          </Link>
+        </div>
       </form>
+      </div>
     </div>
   );
 }

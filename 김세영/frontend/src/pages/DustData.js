@@ -161,7 +161,7 @@ const DustData = () => {
             if (regionData) {
                 setTodayDust(regionData);
                 setErrorMessage('');
-                // console.log('미세먼지 수치:'+ regionData.pm10Value);
+                console.log('미세먼지 수치2:'+ regionData.pm10Value);
                 setPmValue(regionData.pm10Value);
             } else {
                 setErrorMessage('해당 지역의 데이터가 없습니다.');
