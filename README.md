@@ -3,7 +3,6 @@
 ```
 npm install react-arc-progress -S
 npm install @mui/x-charts @mui/base @mui/joy @mui/icons-material @emotion/styled @emotion/react @mui/styled-engine react-cookie @uiw/react-md-editor
-npm install --save react-horizontal-scrolling-menu
 ```
 
 
