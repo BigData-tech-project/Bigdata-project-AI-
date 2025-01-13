@@ -20,4 +20,4 @@ npm install @mui/base @mui/joy @mui/icons-material @emotion/styled @emotion/reac
 pip install openai
 ```
 
-.env에 OPENAI_API_KEY 추가
+사용자 환경변수에 OPENAI_API_KEY 추가
