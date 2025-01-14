@@ -12,8 +12,8 @@ import './css/base.css';
 import UserNowData from './pages/UserNowData';
 import UserPastData from './pages/UserPastData';
 import Analyze from './pages/Analyze';
-import Map from './pages/Map';
 import Main from './pages/Main';
+import Map from './pages/Map';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -93,7 +93,9 @@ function App() {
       </nav> */}
       <Routes>
         <Route path="/" element={isAuthenticated ? <Main /> : <Navigate to="/login" />} />
-        <Route path="/main" element={<Main />} />
+        <Route 
+          path="/main" 
+          element={isAuthenticated ? <Main setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />} />
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login setIsAuthenticated={setIsAuthenticated} />}
@@ -108,7 +110,7 @@ function App() {
         />
         <Route
           path="/mypage"
-          element={isAuthenticated ? <Mypage /> : <Navigate to="/login" />}
+          element={isAuthenticated ? <Mypage setIsAuthenticated={setIsAuthenticated}/> : <Navigate to="/login" />}
         />
         <Route
           path="/dustdata"

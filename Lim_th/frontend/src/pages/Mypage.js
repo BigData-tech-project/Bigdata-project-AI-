@@ -4,7 +4,7 @@ import '../css/main.css';
 import MenuIcon from '@mui/icons-material/Menu';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
-function Mypage() {
+function Mypage({setIsAuthenticated}) {
 
   const [userData, setUserData] = useState(null);
   const [accessHistory, setAccessHistory] = useState([]);
@@ -74,6 +74,7 @@ function Mypage() {
 
     fetchData();
   }, []);
+  
 
   function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -138,7 +139,7 @@ function Mypage() {
       {/* HEADER */}
       <header className="header">
         <p className="menu-button" onClick={toggleSidebar}><MenuIcon sx={{ fontSize: 25 }} className="header-button" /></p>
-        <div className="location">서울시 장진구 중곡동</div>
+        <div className="location"></div>
         <Link to={'/map'}><LocationOnIcon sx={{ fontSize: 25 }} className="header-button" /></Link>
       </header>
 
@@ -148,7 +149,24 @@ function Mypage() {
           <ul>
             <li><Link to="/">홈</Link></li>
             <li><Link to="/mypage">마이페이지</Link></li>
-            <li><Link to="/login">로그아웃</Link></li>
+            <li><Link 
+              onClick={async (e) => {
+                e.preventDefault();
+                const logoutResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/logout/`, {
+                  method: "POST",
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                  },
+                  credentials: "include",
+                });
+                setIsAuthenticated(false);
+                const data = await logoutResponse.json();
+                document.cookie = `csrftoken=${data.data.csrftoken}; path=/;`;
+                localStorage.clear();
+            }}
+            >
+            로그아웃</Link></li>
           </ul>
         </aside>
       )}

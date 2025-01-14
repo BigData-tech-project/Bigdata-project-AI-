@@ -56,7 +56,7 @@ const getAirQualityStatus = (value, pollutantType) => {
   return '매우 나쁨';
 };
 
-const Main = () => {
+function Main({setIsAuthenticated}) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dustData, setDustData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
