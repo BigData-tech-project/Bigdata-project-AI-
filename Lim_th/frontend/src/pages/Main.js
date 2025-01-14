@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import '../css/main.css';
 import MenuIcon from '@mui/icons-material/Menu';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -56,26 +56,46 @@ const getAirQualityStatus = (value, pollutantType) => {
   return '매우 나쁨';
 };
 
-function Main({setIsAuthenticated}) {
+const Main = () => {
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [dustData, setDustData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [apiData, setApiData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");  
+  const [userData,setUserData] = useState('');
   const [userName, setUserName] = useState('');
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const {dustData: initialDustData = [], todayDust = []} = location.state || {}; // location에서 가져오는 dustData
+  const [dustData, setDustData] = useState(initialDustData); // 상태를 초기화할 때 location에서 가져온 값을 사용
   const [dbData, setDbData] = useState(null);
+  const [apiData, setApiData] = useState([]);
   const [analy, setAnaly] = useState('');
-
+  const [error, setError] = useState(null);
+  
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+  
+  const fetchDbData = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/app/info/', {
+        withCredentials: true, // 쿠키를 포함한 요청을 보냅니다.
+      });
+    //   console.log('DB Response:', response.data);
+      setUserData(response.data.disease);
 
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
+      if (!response.data.region) {
+        throw new Error('지역 정보가 없습니다.');
+      }
+
+      const [mainRegion, subRegion] = response.data.region.split(' ');
+      setCity(mainRegion || '');
+      setRegion(subRegion || '');
+      return response.data;
+    } catch (error) {
+      console.error('DB 데이터 가져오기 실패:', error);
+    }
+  };
 
   const fetchDustData = async () => {
     try {
@@ -93,24 +113,6 @@ function Main({setIsAuthenticated}) {
     }
   };
 
-  const fetchDbData = async (userId) => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/app/info/', {
-        withCredentials: true
-      });
-      
-
-  
-      if (!response.data.region || !response.data.disease) {
-        throw new Error('필요한 데이터가 없습니다.');
-      }
-      return response.data;
-    } catch (error) {
-      console.error('DB 데이터 가져오기 실패:', error);
-      throw error;
-    }
-  };
-  
   const fetchDetailData = async (fullRegion) => {
     try {
       const [mainRegion, subRegion] = fullRegion.split(' ');
@@ -131,82 +133,96 @@ function Main({setIsAuthenticated}) {
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-    const storedUserName = localStorage.getItem("user_name") || '';
+          // fetchDbData();
+          const userId = localStorage.getItem("user_id");
+          const storedUserName = localStorage.getItem("user_name") || '';
 
-    setUserName(storedUserName);
+          setUserName(storedUserName);
 
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-        const [dustResult, userDbData] = await Promise.all([
-          fetchDustData(),
-          fetchDbData(userId)
-        ]);
-    
-        setDustData(dustResult);
-        setDbData(userDbData);
+          const fetchAllData = async () => {
+            try {
+              setLoading(true);
+              const [dustResult, userDbData] = await Promise.all([
+                fetchDustData(),
+                fetchDbData(userId)
+              ]);
+          
+              setDustData(dustResult);
+              setDbData(userDbData);
 
-        if (userDbData && userDbData.region) {
-          const detailData = await fetchDetailData(userDbData.region);
-          setApiData([{ 
-            region: userDbData.region, 
-            apiData: detailData 
-          }]);
-    
-          setDustData(prevData => ({
-            ...prevData,
-            disease: userDbData.disease,
-          }));
-        
-          fetch('http://127.0.0.1:8000/analyze/compact/'+detailData[0].pm10Value+'&'+userDbData.disease, {
-            method: 'GET'
-          })
-          .then(res => res.json())
-          .then(json => {
-            setAnaly(json);
-          })
-          .catch(err => {
-            console.log(err);
+              if (userDbData && userDbData.region) {
+                const detailData = await fetchDetailData(userDbData.region);
+                setApiData([{ 
+                  region: userDbData.region, 
+                  apiData: detailData 
+                }]);
+          
+                setDustData(prevData => ({
+                  ...prevData,
+                  disease: userDbData.disease,
+                }));
+              
+                fetch('http://127.0.0.1:8000/analyze/compact/'+detailData[0].pm10Value+'&'+userDbData.disease, {
+                  method: 'GET'
+                })
+                .then(res => res.json())
+                .then(json => {
+                  setAnaly(json);
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+              }
+            } catch (error) {
+              setError(error.message);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          if (userId) {
+            fetchAllData();
+          }
+      }, []);
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+    // 로그인 상태 확인
+    useEffect(() => {
+      const checkAuth = async () => {
+        try {
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/check-auth/`, {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken'),
+            },
+            credentials: "include", // 세션 쿠키를 자동으로 포함
           });
+          if (response.ok) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+            localStorage.clear();
+          }
+        } catch (error) {
+          console.error("Error checking authentication:", error);
+          setIsAuthenticated(false);
         }
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
+  
+      checkAuth();
+    }, []);
 
-    if (userId) {
-      fetchAllData();
-    }
-  }, []);
-
-  useEffect(() => {
-
-    // console.log('dbData 업데이트:', dbData);
-    const checkAuth = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/check-auth/`, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'),
-          },
-          credentials: "include",
-        });
-        setIsAuthenticated(response.ok);
-        if (!response.ok) {
-          localStorage.clear();
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
+  const getEmoji = (pm10Value) => {
+    if (pm10Value <= 30) return '😊';
+    if (pm10Value <= 80) return '😐';
+    if (pm10Value <= 150) return '😷';
+    return '😡';
+  };
 
   if (loading) return <div className="loading">로딩중...</div>;
   if (error) return <div className="error">에러: {error}</div>;
@@ -394,13 +410,16 @@ function Main({setIsAuthenticated}) {
           <li><span style={{ backgroundColor: '#F44336' }}></span> 매우 나쁨</li>
         </ul> */}
 
+        {/* 내 행동 요령 */}
         <section className="guidance">
           <h3 className='guidance-title'>내 행동 요령</h3>
-          <p className='guidance-p'>{analy || '대기질 분석 정보를 불러오는 중입니다...'}</p>
+          <p className='guidance-p'>실외활동 시 특별히 행동에 제한 받을 필요 없지만 '민감군'의 경우 특별히 개인별 건강상태에 따라 유의하며 화동해야 함</p>
         </section>
 
+        {/* 시간별 예보 */}
         <section className="hourly-forecast">
           <h3>시간별 예보</h3>
+
           <div className="forecast-scroll" onMouseDown={(e) => {
             e.preventDefault();
             const container = e.currentTarget;
@@ -454,79 +473,118 @@ function Main({setIsAuthenticated}) {
 
         {/* 일일 예보 */}
         <section className="hourly-forecast">
-        <h3>일일 예보</h3>
+          <h3>일일 예보</h3>
 
-        <div className="forecast-scroll" onMouseDown={(e) => {
-            e.preventDefault();
-            const container = e.currentTarget;
-            let startX = e.pageX - container.offsetLeft;
-            let scrollLeft = container.scrollLeft;
+          <div className="forecast-scroll" ref={(el) => {
+              if (el) {
+              // 현재 데이터를 중앙에 보이게 스크롤 설정
+              const currentElement = el.querySelector(".current-data-box");
+              if (currentElement) {
+                currentElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "center",
+                  });
+                }
+              }
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const container = e.currentTarget;
+              let startX = e.pageX - container.offsetLeft;
+              let scrollLeft = container.scrollLeft;
 
             const onMouseMove = (ev) => {
-            const x = ev.pageX - container.offsetLeft;
-            const walk = (x - startX) * 2; // Adjust scrolling speed
-            container.scrollLeft = scrollLeft - walk;
+                const x = ev.pageX - container.offsetLeft;
+                const walk = (x - startX) * 2; // Adjust scrolling speed
+                container.scrollLeft = scrollLeft - walk;
             };
 
             const onMouseUp = () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
+              window.removeEventListener("mousemove", onMouseMove);
+              window.removeEventListener("mouseup", onMouseUp);
             };
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        }}>
-            <div className="forecast-box">
-            <p className='pmText'>1/20(월)</p>
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseup", onMouseUp);
+          }}
+          >
+        
+        {/* 과거 데이터 렌더링 */}
+        {dustData.length > 0 ? (
+          dustData.map((item, index) => {
+            const dataTime = item?.msurDt || '날짜 없음';
+            const pm10Value = item?.pm10Value || '데이터 없음';
+
+            return (
+              <div key={index} className="forecast-box"
+              onClick={(e) => {
+                e.currentTarget.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "center",
+                });
+              }}
+              >
+                <p className="pmText">{dataTime.split(' ')[0]}</p>
+                <hr />
+                <div className="emoji">{getEmoji(pm10Value)}</div>
+                <hr />
+                <p className="pmStatus">{pm10Value} µg/m³</p>
+              </div>
+            );
+          })
+        ) : (
+          <p>데이터를 불러오는 중입니다...</p>
+        )}
+
+        {/* 현재 데이터 렌더링 */}
+        {todayDust && (
+          <div className="forecast-box current-data-box"
+          onClick={(e) => {
+            e.currentTarget.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "center",
+            });
+          }}
+          >
+            <p className="pmText">현재</p>
             <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
+            <div className="emoji">{getEmoji(todayDust.pm10Value)}</div>
             <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/21(화)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/22(수)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/23(목)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/24(금)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/25(토)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-            <div className="forecast-box">
-            <p className='pmText'>1/26(일)</p>
-            <hr />
-            <div className="emoji"><SentimentSatisfiedAltIcon sx={{ fontSize: 25, color: "#7f99b8" }} /></div>
-            <hr />
-            <p className='pmStatus'>좋음</p>
-            </div>
-        </div>
-        </section>
+            <p className="pmStatus">{todayDust.pm10Value} µg/m³</p>
+          </div>
+        )}
+
+        {dustData.length > 0 ? (
+          dustData.map((item, index) => {
+            const dataTime = item?.msurDt || '날짜 없음';
+            const pm10Value = item?.pm10Value || '데이터 없음';
+
+            return (
+              <div key={index} className="forecast-box"
+              onClick={(e) => {
+                e.currentTarget.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "center",
+                });
+              }}
+              >
+                <p className="pmText">{dataTime.split(' ')[0]}</p>
+                <hr />
+                <div className="emoji">{getEmoji(pm10Value)}</div>
+                <hr />
+                <p className="pmStatus">{pm10Value} µg/m³</p>
+              </div>
+            );
+          })
+        ) : (
+          <p>데이터를 불러오는 중입니다...</p>
+        )}
+      </div>
+    </section>
 
 
       </div>
