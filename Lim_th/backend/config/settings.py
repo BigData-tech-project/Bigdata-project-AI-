@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv #추가
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
 # from django.conf.global_settings import AUTH_USER_MODEL
 
 # from django.conf.global_settings import STATICFILES_DIRS

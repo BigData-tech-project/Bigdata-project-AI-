@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'; 
-import Home from './pages/Home';
-import Main from './pages/Main';
+
 import Login from './pages/Login';
 import Register from './pages/Register'; // 추가 필요
 import DustData from './pages/DustData';
 import Mypage from './pages/Mypage';
 import TodayDust from './pages/TodayDust';
-import Analyze from './pages/Analyze';
-import Dashboard from './pages/Dashboard'; // 추가 필요
 import Update from './pages/Update'; // 추가 필요
 import UpdatePassword from './pages/UpdatePassword'; // 추가 필요
 import './css/base.css';
+import UserNowData from './pages/UserNowData';
+import UserPastData from './pages/UserPastData';
+import Analyze from './pages/Analyze';
+import Map from './pages/Map';
+import Main from './pages/Main';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -51,18 +54,14 @@ function App() {
 
   return (
     <Router>
-      <h1><marquee bgcolor="#FF0000" direction="right">localhost:3000 ↔ 127.0.0.1:8000 (CORS ERROR)</marquee></h1>
+      
+      {/*       
       <nav>
         <ul>
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/main">Main</Link></li>
           {isAuthenticated ? (
             <> 
-              <li><Link to="/todaydust">Today's Dust</Link></li>
-              <li><Link to="/dashboard">대시보드</Link></li>
+              <li><Link to="/">Main</Link></li>
               <li><Link to="/mypage">마이페이지</Link></li>
-              <li><Link to="/dustdata">Dust Data</Link></li>
-              <li><Link to="/analyze">Analyze</Link></li>
               <li>
                 <Link
                   onClick={async () => {
@@ -91,9 +90,9 @@ function App() {
             </>
           )}
         </ul>
-      </nav>
+      </nav> */}
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={isAuthenticated ? <Main /> : <Navigate to="/login" />} />
         <Route path="/main" element={<Main />} />
         <Route
           path="/login"
@@ -104,8 +103,8 @@ function App() {
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
         />
         <Route
-          path="/dashboard"
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+          path="/analyze"
+          element={<Analyze />}
         />
         <Route
           path="/mypage"
@@ -121,7 +120,7 @@ function App() {
         />
         <Route
           path="/analyze"
-          element={isAuthenticated ? <Analyze /> : <Navigate to="/login" />}
+          element={isAuthenticated ? <DustData /> : <Navigate to="/login" />}
         />
         <Route
           path="/update"
@@ -131,6 +130,19 @@ function App() {
           path="/updatepassword"
           element={isAuthenticated ? <UpdatePassword setIsAuthenticated={setIsAuthenticated}/> : <Navigate to="/login" />}
         />
+        <Route
+          path="/usernowdata"
+          element={isAuthenticated ? <UserNowData /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/userpastdata"
+          element={isAuthenticated ? <UserPastData /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/map"
+          element={isAuthenticated ? <Map /> : <Navigate to="/login" />}
+        />
+        <Route path="/dashboard" element={<Navigate to="/main" replace />} />
       </Routes>
     </Router>
   );
