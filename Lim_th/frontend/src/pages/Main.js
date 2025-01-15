@@ -63,6 +63,8 @@ const Main = () => {
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");  
   const [userData,setUserData] = useState('');
+
+
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const {dustData: initialDustData = [], todayDust = []} = location.state || {}; // location에서 가져오는 dustData
@@ -364,51 +366,26 @@ const Main = () => {
               </div>
             </Box>
           </section>
-
-          {/* <section className="chart">
-            <Box flexGrow={1}>
-              <PieChart
-                margin={{ top: 0, bottom: 30, left: 10, right: 10 }}
-                series={[
-                  {
-                    data: [
-                      { id: 0, value: 10, color: '#829ed3', label: '(0-15) 좋음' },
-                      { id: 1, value: 15, color: '#74cca9', label: '(16-35) 보통' },
-                      { id: 2, value: 20, color: '#ecd685', label: '(36-75) 나쁨' },
-                      { id: 3, value: 25, color: '#d98d8d', label: '(76↑) 매우 나쁨' },
-                    ],
-                    innerRadius: 50,
-                  },
-                ]}
-                width={150}
-                height={300}
-                slotProps={{
-                  legend: {
-                    itemMarkWidth: 20,
-                    itemMarkHeight: 10,
-                    fontSize: 15,
-                    direction: 'column',
-                    position: { vertical: 'bottom', horizontal: 'left' },
-                    padding: 0,
-                    markGap: 15,
-                    itemGap: 5,
-                  },
-                }}
-              />
-            </Box>
-          </section> */}
-
-          {/* <div className="weekly-status" style={{ color: '#ecd685' }}>
-            이번 주 나쁨 46%
-          </div> */}
         </Stack>
 
-        {/* <ul className="legend">
-          <li><span style={{ backgroundColor: '#4C50AF' }}></span> 좋음</li>
-          <li><span style={{ backgroundColor: '#4CAF50' }}></span> 보통</li>
-          <li><span style={{ backgroundColor: '#FFF559' }}></span> 나쁨</li>
-          <li><span style={{ backgroundColor: '#F44336' }}></span> 매우 나쁨</li>
-        </ul> */}
+        <div className="air-quality-legend">
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#4C50AF' }}></div>
+            <span>좋음</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#4CAF50' }}></div>
+            <span>보통</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#FFF559' }}></div>
+            <span>나쁨</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#F44336' }}></div>
+            <span>매우 나쁨</span>
+          </div>
+        </div>
 
         {/* 내 행동 요령 */}
         <section className="guidance">

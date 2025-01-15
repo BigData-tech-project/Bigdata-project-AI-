@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale } from 'chart.js';
@@ -8,7 +8,7 @@ import MDEditor from '@uiw/react-md-editor';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 
-const serviceKey = "zhvs5TlKznNkfpG91l4BPgIcZtbsxovufWhyA4+w2KcaA1dp6RsGVOYHyD91i/XzDfAqOFIdScVjvbElsw+BCQ==";
+const serviceKey = process.env.REACT_APP_DUST_SERVICE_KEY; // .env에서 키 가져오기
 
 const DustData = () => {
     const [city, setCity] = useState("");
@@ -22,6 +22,7 @@ const DustData = () => {
     const [userData,setUserData] = useState('');
     const [pmValue,setPmValue] = useState('');
     const [analy, setAnaly]=useState('test');
+    const navigate = useNavigate();
 
     const fetchDbData = async () => {
     try {
@@ -53,7 +54,7 @@ const DustData = () => {
         const now = new Date();
         const start = new Date();
         const end = new Date();
-        start.setDate(now.getDate() - 7); // 일주일 전
+        start.setDate(now.getDate() - 3); // 일주일 전
         end.setDate(now.getDate()-1); // 하루 전
     
         const formatDate = (date) => {
@@ -95,7 +96,7 @@ const DustData = () => {
         fetchCityAvgData();
     }, [city]);
 
-    // 과거 데이터 조회
+    // 과거 데이터 조회 -> 일일 예보에 사용 
     const fetchPastData = async () => {
         if (!city || !region) {
             setErrorMessage('시/도와 구/군을 선택해주세요.');
@@ -108,7 +109,7 @@ const DustData = () => {
                     params: {
                         serviceKey: serviceKey,
                         returnType: 'json',
-                        numOfRows: 100,
+                        numOfRows: 5,
                         pageNo: 1,
                         inqBginDt: startDate.replace(/-/g, ''), // 자동 설정된 시작 날짜
                         inqEndDt: endDate.replace(/-/g, ''),   // 자동 설정된 종료 날짜
@@ -121,12 +122,21 @@ const DustData = () => {
             const data = response.data?.response?.body?.items || [];
             setDustData(data);
             setErrorMessage('');
+            console.log('API Response Data:', response.data);
+            console.log('Dust Data:', response.data);
         } catch (error) {
             console.error('API 호출 오류:', error);
             setErrorMessage('과거 데이터를 불러오는데 실패했습니다.');
         }
     };
     
+    useEffect(() => {
+        if(city && region && startDate && endDate){
+            fetchPastData();
+        }
+    }, [city, region, startDate, endDate]);
+    
+
     // 현재 데이터 조회
     const fetchTodayData = async () => {
         if (!city || !region) {
@@ -145,7 +155,7 @@ const DustData = () => {
                         numOfRows: 100,
                         pageNo: 1,
                         sidoName: city,
-                        searchCondition: 'DAILY',
+                        searchCondition: 'HOUR',
                     },
                 }
             );
@@ -196,6 +206,20 @@ const DustData = () => {
         }
 
     }, [city, region]);
+
+    // 데이터 가져오고 Main으로 리다이렉션
+    useEffect(() => {
+        const loadData = async () => {
+        await fetchDbData();
+        await fetchPastData();
+        await fetchTodayData();
+        if (dustData.length > 0 || todayDust) {
+            navigate('/main', { state: { dustData, todayDust } }); // Main으로 리다이렉션
+        }
+        };
+
+        loadData();
+    }, [city, region, startDate, endDate, dustData, todayDust, navigate]);
 
     const createEmojiCanvas = (emoji) => {
         const canvas = document.createElement('canvas');
@@ -383,7 +407,7 @@ const DustData = () => {
                         </p>
                     </div>
                 </div>
-            <Link to="/main">
+            <Link to="/main" state={{dustData, todayDust}}>
                 <button>메인으로 돌아가기</button>
             </Link>
         </div>
