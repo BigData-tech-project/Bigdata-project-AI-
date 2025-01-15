@@ -64,6 +64,9 @@ const Map = () => {
   const [loading, setLoading] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(7);
 
+  const [region, setRegion] = useState('위치 정보 없음');
+  const [dbData, setDbData] = useState(null);
+
     const getMarkerStyle = (value, zoomLevel) => {
         const backgroundColor = getColorByPollutant(value, 'PM10');
         
@@ -81,6 +84,22 @@ const Map = () => {
         border: '2px solid #333',
         fontSize: `${fontSize}px`
         };
+    };
+
+    const fetchDbData = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/app/info/', {
+          withCredentials: true,
+        });
+        
+        if (response.data.region) {
+          setRegion(response.data.region);
+        }
+        return response.data;
+      } catch (error) {
+        console.error('DB 데이터 가져오기 실패:', error);
+        setRegion('위치 정보 없음');
+      }
     };
 
   const fetchDustData = async () => {
@@ -152,6 +171,15 @@ const Map = () => {
       };
 
       fetchData();
+
+      const initializeData = async () => {
+        await checkAuth();
+        const dbData = await fetchDbData();
+        // fetchDustData도 호출
+        const dustData = await fetchData();
+      };
+    
+      initializeData();
     }, []);
 
     if (loading) {
@@ -206,10 +234,16 @@ const Map = () => {
 
   return (
     <div className="app-container">
-      {/* HEADER */}
       <header className="header">
-        <p className="menu-button" onClick={toggleSidebar}><MenuIcon sx={{ fontSize: 25 }} className="header-button" /></p>
-        <Link to={'/map'}><LocationOnIcon sx={{ fontSize: 25 }} className="header-button" /></Link>
+        <p className="menu-button" onClick={toggleSidebar}>
+          <MenuIcon sx={{ fontSize: 25 }} className="header-button" />
+        </p>
+        <div className="location">
+          {region || '위치 정보 없음'}
+        </div>
+        <Link to={'/map'}>
+          <LocationOnIcon sx={{ fontSize: 25 }} className="header-button" />
+        </Link>
       </header>
 
       {sidebarOpen && (
@@ -308,16 +342,16 @@ const Map = () => {
         </MapContainer>
         <ul style={{ display: 'flex', flexWrap: 'wrap' }}>
             <li style={{ width: '45%' }}>
-                <span style={{ backgroundColor: 'rgba(76, 80, 175, 0.7)' }}></span>(0~30) : 좋음
+                <span style={{ backgroundColor: '#4C50AF' }}></span>(0~30) : 좋음
             </li>
             <li style={{ width: '45%' }}>
-                <span style={{ backgroundColor: 'rgba(76, 175, 80, 0.7)' }}></span>(~80) : 보통
+                <span style={{ backgroundColor: '#4CAF50' }}></span>(~80) : 보통
             </li>
             <li style={{ width: '45%' }}>
-                <span style={{ backgroundColor: 'rgba(255, 245, 89, 0.7)' }}></span>(~150) : 나쁨
+                <span style={{ backgroundColor: '#FFF559' }}></span>(~150) : 나쁨
             </li>
             <li style={{ width: '45%' }}>
-                <span style={{ backgroundColor: 'rgba(244, 67, 54, 0.7)' }}></span>(150+) : 매우 나쁨
+                <span style={{ backgroundColor: '#F44336' }}></span>(150+) : 매우 나쁨
             </li>
         </ul>
       </div>

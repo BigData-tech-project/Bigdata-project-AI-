@@ -77,7 +77,6 @@ const Main = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  
   const fetchDbData = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/app/info/', {
@@ -393,7 +392,7 @@ const Main = () => {
           <p className='guidance-p'>실외활동 시 특별히 행동에 제한 받을 필요 없지만 '민감군'의 경우 특별히 개인별 건강상태에 따라 유의하며 화동해야 함</p>
         </section>
 
-        {/* 시간별 예보 */}
+        {/* 시간별 예보
         <section className="hourly-forecast">
           <h3>시간별 예보</h3>
 
@@ -446,7 +445,7 @@ const Main = () => {
               <p className='pmStatus'>좋음</p>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* 일일 예보 */}
         <section className="hourly-forecast">
