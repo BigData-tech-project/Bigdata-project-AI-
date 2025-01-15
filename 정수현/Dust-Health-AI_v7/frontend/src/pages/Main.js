@@ -514,17 +514,25 @@ const Main = () => {
           </div>
         )}
 
-        {futureForecast ? (
-              <div className="forecast-box">
-                <p className="pmText">{futureForecast.dataTime}</p>
-                <hr />
-                <p className="pmStatus">{futureForecast.informGrade}</p>
-                <hr />
-                <p className="pmCause">{futureForecast.informCause}</p>
-              </div>
-            ) : (
-              <p>loading...</p>
-            )}
+        {futureForecast && futureForecast.informGrade ? (
+          <div className="forecast-box">
+            {/* 발표 날짜 */}
+            <p className="pmText">{futureForecast.dataTime.split(' ')[0]}</p>
+            <hr />
+            {/* 미세먼지 상태에 따른 이모지 */}
+            <div className="emoji">
+              {futureForecast.informGrade.includes("좋음") && "😊"}
+              {futureForecast.informGrade.includes("보통") && "😐"}
+              {futureForecast.informGrade.includes("나쁨") && "😷"}
+              {futureForecast.informGrade.includes("매우 나쁨") && "😡"}
+            </div>
+            <hr />
+            {/* 등급 정보 */}
+            <p className="pmStatus">{futureForecast.informGrade.split(',').find(grade => grade.includes(city))?.split(':')[1]?.trim() || "정보 없음"}</p>
+          </div>
+        ) : (
+          <p>loading...</p>
+        )}
           </div>
         </section>
 
