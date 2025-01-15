@@ -513,6 +513,8 @@ const Main = () => {
           </div>
         )}
 
+        {/* 미래 예보 데이터 렌더링 */}
+
         {futureForecast && futureForecast.informGrade ? (
           <div className="forecast-box">
             {/* 발표 날짜 */}
