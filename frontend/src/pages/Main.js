@@ -397,7 +397,24 @@ const Main = () => {
           </Box>
         </section>
       </Stack>
-
+      <div className="air-quality-legend">
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#4C50AF' }}></div>
+            <span>좋음</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#4CAF50' }}></div>
+            <span>보통</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#FFF559' }}></div>
+            <span>나쁨</span>
+          </div>
+          <div className="legend-item">
+            <div className="color-box" style={{ backgroundColor: '#F44336' }}></div>
+            <span>매우 나쁨</span>
+          </div>
+        </div>
         {/* 내 행동 요령 */}
         <section className="guidance">
           <h3 className='guidance-title'>내 행동 요령<span class='ai-text'><AutoAwesomeIcon sx={{fontSize:15}}/> AI의 제안</span></h3>
