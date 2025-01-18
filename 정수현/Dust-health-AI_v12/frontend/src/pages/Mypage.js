@@ -140,7 +140,7 @@ function Mypage({setIsAuthenticated}) {
       {/* HEADER */}
       <header className="header">
         <p className="menu-button" onClick={toggleSidebar}><MenuIcon sx={{ fontSize: 25 }} className="header-button" /></p>
-        <div className="location">mypage</div>
+        <div className="location">{userData ? `${userData.nickname}'s mypage` : 'mypage'}</div>
         <Link to={'/map'}><LocationOnIcon sx={{ fontSize: 25 }} className="header-button" /></Link>
       </header>
 

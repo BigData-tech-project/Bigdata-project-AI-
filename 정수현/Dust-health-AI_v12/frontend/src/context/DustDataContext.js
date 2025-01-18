@@ -1,7 +1,15 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-export const DustDataContext = createContext();
+export const DustDataContext = createContext({
+  pastdustData: [],
+  futureForecast: null,
+  futurePrediction: null,
+  filteredPrediction: {
+    future_dates: [],
+    predictions: [],
+  },
+});
 
 export const DustDataProvider = ({ children }) => {
   const [pastdustData, setPastDustData] = useState([]);
