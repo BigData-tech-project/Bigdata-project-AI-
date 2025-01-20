@@ -17,7 +17,6 @@ function DustPrediction() {
       });
   }, []);
   
-
   return (
     <div>
       <h1>Dust Prediction</h1>

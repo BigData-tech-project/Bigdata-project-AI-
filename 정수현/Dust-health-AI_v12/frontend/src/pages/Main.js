@@ -181,6 +181,24 @@ const Main = ({setIsAuthenticated}) => {
         if (userDbData && userDbData.region) {
           const detailData = await fetchDetailData(userDbData.region);
           setApiData([{ region: userDbData.region, apiData: detailData }]);
+
+          setDustData(prevData => ({
+            ...prevData,
+            disease: userDbData.disease,
+          }));
+
+          fetch('http://127.0.0.1:8000/analyze/compact/'+detailData[0].pm10Value+'&'+userDbData.disease, {
+            method: 'GET'
+          })
+          .then(res => res.json())
+          .then(json => {
+            setAnaly(json);
+          })
+          .catch(err => {
+            console.log(err);
+          });
+          // console.log('미세먼지 수치:'+detailData[0].pm10Value);
+          // console.log('보유 질병:'+userDbData.disease);
         }
       } catch (error) {
         setError(error.message);
@@ -228,10 +246,14 @@ const Main = ({setIsAuthenticated}) => {
 
      // 미래 예보 함수
   const renderFuturePrediction = () => {
-    if (filteredPrediction) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1); // 내일 날짜 계산
+    const tomorrowDateStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  
+    if (filteredPrediction && filteredPrediction.future_dates && filteredPrediction.predictions) {
       return filteredPrediction.future_dates.map((date, index) => {
         const roundedPrediction = Math.round(filteredPrediction.predictions[index]);
-
+  
         return (
           <div key={index} className="forecast-box">
             {/* 예측 날짜 */}
@@ -245,14 +267,18 @@ const Main = ({setIsAuthenticated}) => {
           </div>
         );
       });
-    } else if (futureForecast) {
+    } else if (futureForecast && futureForecast.dataTime && futureForecast.informGrade) {
       // fallback으로 futureForecast를 표시
-      const forecastDate = futureForecast.dataTime.split(' ')[0];
-      const grade = futureForecast.informGrade.split(',').find(grade => grade.includes(city))?.split(':')[1]?.trim();
-
+      const grade = futureForecast.informGrade
+        .split(',')
+        .find(grade => grade.includes(city))
+        ?.split(':')[1]
+        ?.trim();
+  
       return (
         <div className="forecast-box">
-          <p className="pmText">{forecastDate}</p>
+          {/* 내일 날짜를 pmText로 표시 */}
+          <p className="pmText">{tomorrowDateStr}</p>
           <hr />
           {/* 이모지를 getEmoji 함수로 가져옴 */}
           <div className="emoji large-emoji">{getEmoji(grade)}</div>
@@ -493,6 +519,7 @@ const Main = ({setIsAuthenticated}) => {
           pastdustData.map((item, index) => {
             const dataTime = item?.msurDt || '날짜 없음';
             const pm10Value = item?.pm10Value || '데이터 없음';
+            const pm10Status = getAirQualityStatus(pm10Value, "PM10");
 
             return (
               <div key={index} className="forecast-box"
@@ -508,7 +535,7 @@ const Main = ({setIsAuthenticated}) => {
                 <hr />
                 <div className="emoji large-emoji">{getEmoji(pm10Value)}</div>
                 <hr />
-                <p className="pmStatus">{pm10Value} µg/m³</p>
+                <p className="pmStatus">{pm10Status}</p>
               </div>
             );
           })
@@ -531,7 +558,7 @@ const Main = ({setIsAuthenticated}) => {
             <hr />
             <div className="emoji large-emoji">{getEmoji(currentData.pm10Value)}</div>
             <hr />
-            <p className="pmStatus">{currentData.pm10Value} µg/m³</p>
+            <p className="pmStatus">{getAirQualityStatus(currentData.pm10Value, "PM10")}</p>
           </div>
         )}
 

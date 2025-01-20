@@ -94,7 +94,7 @@ export const DustDataProvider = ({ children }) => {
           const response = await axios.get('http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMinuDustFrcstDspth', {
             params: {
               //futureservicekey
-              serviceKey: "zhvs5TlKznNkfpG91l4BPgIcZtbsxovufWhyA4+w2KcaA1dp6RsGVOYHyD91i/XzDfAqOFIdScVjvbElsw+BCQ==",
+              serviceKey,
               returnType: 'json',
               searchDate: new Date().toISOString().split('T')[0],
               informCode: 'PM10',
